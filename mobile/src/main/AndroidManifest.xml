@@ -1,0 +1,59 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="payment_app.mcs.com.ciniplexis">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>s
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:name=".Activities.MovieHome"
+            android:configChanges="orientation|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.default_searchable"
+                android:value=".Features.actionViews.SearchResultActivity" />
+        </activity>
+
+
+        <activity
+            android:name=".Activities.MovieDetails"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName=".Activities.MovieHome">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".Activities.MovieHome" />
+        </activity>
+
+        <activity
+            android:name=".Features.actionViews.SearchResultActivity"
+            android:label="Search Results">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:value="@xml/searchable" />
+        </activity>
+
+        <provider
+            android:name=".ContentProvider.MovieContentProvider"
+            android:authorities="payment_app.mcs.com.ciniplexis" />
+
+        <service
+            android:name=".Service.MovieIntentService"
+            android:enabled="true" />
+        <receiver
+            android:name=".Receivers.MovieBroadcastReceiver"
+            android:enabled="true" />
+    </application>
+
+
+</manifest>

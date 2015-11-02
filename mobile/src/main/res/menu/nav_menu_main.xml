@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_movies"
+            android:checked="true"
+            android:icon="@drawable/ic_action_video"
+            android:title="@string/movies" />
+        <item
+            android:id="@+id/nav_purchases"
+            android:icon="@drawable/ic_action_labels"
+            android:title="@string/purchased" />
+        <item
+            android:id="@+id/nav_favorites"
+            android:icon="@drawable/ic_action_favorite"
+            android:title="@string/favorites" />
+        <item
+            android:id="@+id/nav_location"
+            android:icon="@drawable/ic_action_map"
+            android:title="@string/admission_location" />
+    </group>
+
+
+    <item android:title="@string/news">
+        <menu>
+            <item
+                android:id="@+id/nav_nt"
+                android:icon="@drawable/ic_action_view_as_list"
+                android:title="@string/national_theatre" />
+
+            <item
+                android:id="@+id/nav_special"
+                android:icon="@drawable/ic_action_view_as_list"
+                android:title="@string/specials" />
+
+            <item
+                android:id="@+id/nav_concession"
+                android:icon="@drawable/ic_action_view_as_list"
+                android:title="@string/concession" />
+
+        </menu>
+    </item>
+
+</menu>
