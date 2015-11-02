@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Ciniplexis</string>
+    <string name="popular">Popularity</string>
+    <string name="rating">Rating</string>
+    <string name="in_theatres">In Theatres</string>
+    <string name="coming_soon">Coming Soon</string>
+    <string name="date">Date</string>
+    <string name="greeting_txt">Welcome</string>
+    <string name="open">Open</string>
+    <string name="close">Close</string>
+    <string name="admission_location">Admissions &amp; Locations</string>
+    <string name="favorites">Favorites</string>
+    <string name="movies">Movies</string>
+    <string name="news">News</string>
+    <string name="national_theatre">National Theatre &amp; Opera</string>
+    <string name="specials">Specials</string>
+    <string name="concession">Concession</string>
+    <string name="purchased">Purchased</string>
+    <string name="search">Search</string>
+    <string name="buy_tickets">Buy Tickets</string>
+    <string name="ref_tickets">Refund Tickets</string>
+    <string name="add_fav">Add to Favorites</string>
+    <string name="rem_fav">Remove From Favorites</string>
+    <string name="net_unavailable">Network Unavailable</string>
+    <string name="ticket_cost_lbl">Cost:</string>
+    <string name="release_date_lbl">Released:</string>
+    <string name="loading_image">loading image&#8230;</string>
+    <string name="loading_title">loading title&#8230;</string>
+    <string name="dummy_title">World of Kors</string>
+    <string name="dummy_date">12/10/2015</string>
+    <string name="dummy_rating">3.5</string>
+    <string name="dummy_rating_val">(3.5)</string>
+    <string name="dummy_price">$1300.00</string>
+    <string name="dummy_plot">Once upon a time when the sky and earth were one and the same</string>
+</resources>
