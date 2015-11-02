@@ -111,7 +111,7 @@ public class MovieDetailsFragment extends Fragment
         ((TextView) getView().findViewById(R.id.plot)).setText(movie.getPlot());
 
         ((AppCompatRatingBar) getView().findViewById(R.id.rating)).setRating((float) movie.getRating() / 2);
-        ((TextView) getView().findViewById(R.id.rating_val)).setText(String.format(" (%.1f)",movie.getRating()));
+        ((TextView) getView().findViewById(R.id.rating_val)).setText(String.format(" (%.1f) ",movie.getRating()));
         ((TextView) getView().findViewById(R.id.price)).setText(String.format("$%.2f", movie.getPrice()));
 
 
