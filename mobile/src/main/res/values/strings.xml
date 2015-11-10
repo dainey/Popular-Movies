@@ -22,6 +22,7 @@
     <string name="add_fav">Add to Favorites</string>
     <string name="rem_fav">Remove From Favorites</string>
     <string name="net_unavailable">Network Unavailable</string>
+    <string name="net_data_failed">Failed to fetch additional data</string>
     <string name="ticket_cost_lbl">Cost:</string>
     <string name="release_date_lbl">Released:</string>
     <string name="loading_image">loading image&#8230;</string>

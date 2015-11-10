@@ -33,20 +33,26 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import payment_app.mcs.com.ciniplexis.Contracts.MovieEntry;
 import payment_app.mcs.com.ciniplexis.Features.adapters.MovieCursorRecyclerAdapter;
 import payment_app.mcs.com.ciniplexis.R;
-import payment_app.mcs.com.ciniplexis.Service.MovieIntentService;
 import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
+import payment_app.mcs.com.ciniplexis.Utility.WebController;
+import payment_app.mcs.com.ciniplexis.ContentProvider.AutoMovieContentProvider;
 
 /**
  * Created by ogayle on 28/10/2015.
  */
 public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
-    public RecyclerView rvMovieContainer;
 
-    private Toolbar toolbar;
-    private String partialQuery;
+    @Bind(R.id.movie_list)
+    RecyclerView rvMovieContainer;
+
+    @Bind(R.id.toolbar)
+    Toolbar toolbar;
+    //    private Toolbar toolbar;
     private static SharedPreferences movieSettings;
     private Uri filterUri;
     private static final int MOVIE_LOADER_ID = 100;
@@ -56,8 +62,9 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View fragMovieListPage = inflater.inflate(R.layout.fragment_movie_list, container, false);
         setHasOptionsMenu(true);
+        ButterKnife.bind(this, fragMovieListPage);
 
-        rvMovieContainer = (RecyclerView) fragMovieListPage.findViewById(R.id.movie_list);
+        //rvMovieContainer = (RecyclerView) fragMovieListPage.findViewById(R.id.movie_list);
         final StaggeredGridLayoutManager sGridLayout = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         sGridLayout.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
         rvMovieContainer.setLayoutManager(sGridLayout);
@@ -72,8 +79,8 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
                 int count = (rvMovieContainer.getAdapter().getItemCount() - 10);
 
                 for (int pos : positions) {
-                    if (pos == count && partialQuery != null) {
-                        fetchServerData(partialQuery, false);
+                    if (pos == count && filterUri != null) {
+                        resolveServerQuery(false);
                         return;
                     }
                 }
@@ -84,6 +91,11 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
         return fragMovieListPage;
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
+    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -109,22 +121,21 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
 
         switch (item.getItemId()) {
             case R.id.popularity:
-                partialQuery = MovieUtility.sortQuery.replace(MovieUtility.SORT_CRITERIA, MovieUtility.CRITERIA_POPULARITY);
                 param1 = "popularity";
-                toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.popular)));
                 break;
             case R.id.rating:
-                partialQuery = MovieUtility.sortQuery.replace(MovieUtility.SORT_CRITERIA, MovieUtility.CRITERIA_RATING);
                 param1 = "rating";
-                toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.rating)));
+
                 break;
             case R.id.now_showing:
                 calendar = Calendar.getInstance();
+
                 dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                 param1 = dateFormat.format(calendar.getTime());
+
                 calendar.add(Calendar.DAY_OF_YEAR, 7);
                 param2 = dateFormat.format(calendar.getTime());
-                partialQuery = MovieUtility.movieByDate.replace(MovieUtility.START_DATE, param1).replace(MovieUtility.END_DATE, param2);
+
                 toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.in_theatres)));
                 isSort = false;
                 break;
@@ -132,25 +143,26 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
             case R.id.date:
                 dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                 calendar = Calendar.getInstance();
+
                 calendar.add(Calendar.DAY_OF_YEAR, 7);
                 param1 = dateFormat.format(calendar.getTime());
+
                 calendar.add(Calendar.DAY_OF_YEAR, 60);
                 param2 = dateFormat.format(calendar.getTime());
-                partialQuery = MovieUtility.movieByDate.replace(MovieUtility.START_DATE, param1).replace(MovieUtility.END_DATE, param2);
+
                 toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.coming_soon)));
                 isSort = false;
                 break;
             default:
                 return false;
         }
-        fetchServerData(partialQuery, true);
-
 
         if (isSort)
-            filterUri = MovieEntry.buildMovieBySortCriteria(param1);
+            filterUri = AutoMovieContentProvider.Movie.sortByCriteria(param1);
         else
-            filterUri = MovieEntry.buildMovieUriWithDates(param1, param2);
+            filterUri = AutoMovieContentProvider.Movie.buildMovieUriWithDates(param1, param2);//MovieEntry.buildMovieUriWithDates(param1, param2);
 
+        resolveServerQuery(true);
         getLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
 
         return true;
@@ -170,7 +182,7 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        //toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
         movieSettings = MovieUtility.getMovieSharedPreference(getContext());
         String filterUriStr = movieSettings.getString(MovieUtility.FILTER_URI_PREF, null);
 
@@ -182,7 +194,7 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
 
 
         //use cached data
-        fetchServerData(resolveServerQuery(), true);
+        resolveServerQuery(true);
 
         if (getView() == null)
             return;
@@ -200,67 +212,50 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
         getLoaderManager().initLoader(MOVIE_LOADER_ID, null, this);
     }
 
-    private String resolveServerQuery() {
+    private void resolveServerQuery(boolean isFirstPage) {
         String filterUriStr = filterUri.toString();
         boolean isFilter = filterUriStr.contains(MovieUtility.START_DATE);
+        WebController webController = new WebController(getContext());
+
+        int page = 1;
+        if (!isFirstPage)
+            page = MovieUtility.getMovieSharedPreference(getContext()).getInt(MovieUtility.PAGE_INDEX_PREF, 0) + 1;
 
 
         if (isFilter) {
+            ////// TODO: 03/11/2015 do date diff to choose appropriate title
             toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.date)));
-            return MovieUtility
-                    .movieByDate
-                    .replace(MovieUtility.START_DATE, filterUri.getQueryParameter(MovieUtility.START_DATE))
-                    .replace(MovieUtility.END_DATE, filterUri.getQueryParameter(MovieUtility.END_DATE));
+            String start = filterUri.getQueryParameter(MovieUtility.START_DATE);
+            String end = filterUri.getQueryParameter(MovieUtility.END_DATE);
+
+            webController.getMostBetweenDates(start, end, page);
+
+            return;
         } else {
-            if (!filterUriStr.contains("sort")) {
+            if (filterUriStr.contains("sort")) {
                 String query = filterUri.getLastPathSegment();
 
                 if (query.equals(MovieEntry.buildMovieByRatingView().getLastPathSegment())) {
                     toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.rating)));
-                    return MovieUtility.sortQuery.replace(MovieUtility.SORT_CRITERIA, MovieUtility.CRITERIA_RATING);
+
+                    webController.getMostTopRated(page);
+                    return;
                 }
 
                 if (query.equals(MovieEntry.buildMovieByDateView().getLastPathSegment())) {
                     toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.date)));
-                    return MovieUtility.sortQuery.replace(MovieUtility.SORT_CRITERIA, MovieUtility.CRITERIA_DATE);
+
+                    webController.getMostRecent(page);
+                    return;
                 }
 
             }
         }
         //default
         toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.popular)));
-        return MovieUtility.sortQuery.replace(MovieUtility.SORT_CRITERIA, MovieUtility.CRITERIA_POPULARITY);
+        webController.getMostPopular(page);
     }
 
-    private void fetchServerData(String query, boolean isFirstPage) {
-
-        if (!isNetworkAvailable()) {
-            Toast.makeText(getContext(), getResources().getString(R.string.net_unavailable), Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        int page = 1;
-        partialQuery = query;
-        if (!isFirstPage)
-            page = MovieUtility.getMovieSharedPreference(getContext()).getInt(MovieUtility.PAGE_INDEX_PREF, 0) + 1;
-
-        String searchQuery = MovieUtility.baseQuery.replace(MovieUtility.DISCOVERY_PARAM, query) + "&page=" + page;
-
-        String mostRecentUrl = MovieUtility.getMovieSharedPreference(getContext()).getString(MovieUtility.LAST_VISITED_URL_PREF, "");
-
-        if (!searchQuery.equals(mostRecentUrl)) {
-            Intent myMovieIntent = new Intent(getActivity(), MovieIntentService.class);
-            myMovieIntent.putExtra(MovieUtility.REQUEST_URL, searchQuery);
-            getActivity().startService(myMovieIntent);
-        }
-
-    }
-
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityMangr = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = connectivityMangr.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnectedOrConnecting();
-    }
 
     private void registerTextChangeListener(SearchView sv) {
         sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {

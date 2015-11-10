@@ -1,4 +1,4 @@
-package payment_app.mcs.com.ciniplexis.Interfaces;
+package payment_app.mcs.com.ciniplexis.Interfaces.CallBacks;
 
 import android.net.Uri;
 

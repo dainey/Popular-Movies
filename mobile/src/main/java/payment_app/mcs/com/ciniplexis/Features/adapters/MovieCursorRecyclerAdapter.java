@@ -2,6 +2,7 @@ package payment_app.mcs.com.ciniplexis.Features.adapters;
 
 import android.app.Activity;
 import android.database.Cursor;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.v4.content.ContextCompat;
@@ -12,10 +13,10 @@ import android.view.ViewGroup;
 import com.squareup.picasso.Picasso;
 
 import payment_app.mcs.com.ciniplexis.Contracts.MovieEntry;
-import payment_app.mcs.com.ciniplexis.Interfaces.MovieDetailsCallBack;
+import payment_app.mcs.com.ciniplexis.Interfaces.CallBacks.MovieDetailsCallBack;
 import payment_app.mcs.com.ciniplexis.Utility.Constants;
-import payment_app.mcs.com.ciniplexis.Model.MovieDataModel;
-import payment_app.mcs.com.ciniplexis.Model.MovieViewModel;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.MovieDataModel;
+import payment_app.mcs.com.ciniplexis.Model.ViewModels.MovieViewModel;
 import payment_app.mcs.com.ciniplexis.R;
 import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
 
@@ -26,7 +27,8 @@ public class MovieCursorRecyclerAdapter extends CursorRecyclerAdapter<MovieViewM
 
 
     private Activity _activity;
-    private Drawable placeholder;
+    private Drawable placeholder, favorite;
+    private int ratingProgressColorId;
     private MovieDetailsCallBack defaultDetails = new MovieDetailsCallBack() {
         @Override
         public void displayDetails(Uri uri) {
@@ -37,7 +39,14 @@ public class MovieCursorRecyclerAdapter extends CursorRecyclerAdapter<MovieViewM
     public MovieCursorRecyclerAdapter(Cursor cursor, Activity activity) {
         super(cursor);
         _activity = activity;
+
+        int favoriteColorId = ContextCompat.getColor(activity, R.color.colorAccent);
+        ratingProgressColorId = ContextCompat.getColor(activity, R.color.dividerColor);
         placeholder = ContextCompat.getDrawable(_activity, R.drawable.ic_video_camera_icon);
+        favorite = ContextCompat.getDrawable(_activity, R.drawable.ic_action_favorite);
+
+        favorite.setColorFilter(favoriteColorId, PorterDuff.Mode.MULTIPLY);
+
         if (activity instanceof MovieDetailsCallBack) {
             defaultDetails = (MovieDetailsCallBack) activity;
         }
@@ -54,12 +63,15 @@ public class MovieCursorRecyclerAdapter extends CursorRecyclerAdapter<MovieViewM
     public void onBindViewHolder(MovieViewModel holder, final Cursor cursor) {
 
         final MovieDataModel movie = MovieUtility.getMovieDataFromCursor(cursor);
-
-        //String plot = (movie.getPlot()==null)?"No plot"
-        //holder.setPlot();
         holder.setTitle(movie.getTitle());
         holder.setRating((float) movie.getRating() / 2);
+        holder.setRatingValue(String.format("(%.1f)", movie.getRating()));
         holder.setReleaseDate(movie.getReleaseDate());
+        holder.setRatingColor(ratingProgressColorId);
+        if (movie.isFavorite()) {
+            holder.setFavourite(favorite);
+        }
+
 
         Picasso.with(_activity)
                 .load(Constants.BASE_IMAGE_URL + Constants.TABLET_SIZE_IMAGE + movie.getImageUrl())

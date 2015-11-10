@@ -4,9 +4,6 @@ import android.database.Cursor;
 import android.provider.BaseColumns;
 import android.support.v7.widget.RecyclerView;
 
-import payment_app.mcs.com.ciniplexis.Contracts.DataContracts;
-import payment_app.mcs.com.ciniplexis.Model.MovieViewModel;
-
 /**
  * Created by ogayle on 27/10/2015.
  */

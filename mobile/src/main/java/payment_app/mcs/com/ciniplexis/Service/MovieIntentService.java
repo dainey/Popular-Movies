@@ -23,10 +23,10 @@ public class MovieIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        String url = intent.getStringExtra(MovieUtility.REQUEST_URL);
+        /*String url = intent.getStringExtra(MovieUtility.REQUEST_URL);
 
         String jsonMovieList = new WebController().getRequest(url);
-        MovieUtility.parseMoviesFromJSONString(getApplicationContext(), jsonMovieList, url);
+        MovieUtility.parseMoviesFromJSONString(getApplicationContext(), jsonMovieList, url);*/
     }
 
 

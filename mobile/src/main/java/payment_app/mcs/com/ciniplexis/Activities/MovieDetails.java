@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import payment_app.mcs.com.ciniplexis.Fragments.MovieDetailsFragment;
+import payment_app.mcs.com.ciniplexis.Interfaces.CallBacks.MovieCallback;
 import payment_app.mcs.com.ciniplexis.R;
 import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
 
@@ -47,4 +48,5 @@ public class MovieDetails extends AppCompatActivity {
 
 
     }
+
 }

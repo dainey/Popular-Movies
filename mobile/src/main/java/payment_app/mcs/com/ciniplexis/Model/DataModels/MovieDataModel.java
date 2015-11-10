@@ -1,6 +1,9 @@
-package payment_app.mcs.com.ciniplexis.Model;
+package payment_app.mcs.com.ciniplexis.Model.DataModels;
 
 import android.graphics.Bitmap;
+import android.support.annotation.StringRes;
+
+import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
@@ -8,17 +11,38 @@ import java.io.Serializable;
  * Created by ogayle on 26/10/2015.
  */
 public class MovieDataModel implements Serializable {
+    @SerializedName("id")
     private int Id;
+
+    @SerializedName("title")
     private String title;
+
+    @SerializedName("vote_average")
     private double rating;
+
+    @SerializedName("poster_path")
     private String imageUrl;
+
+    @SerializedName("backdrop_path")
     private String movieBackground;
+
+    @SerializedName("overview")
     private String plot;
+
+    @SerializedName("release_date")
     private String releaseDate;
+
     private boolean is3D;
+
+    @SerializedName("vote_count")
     private double price;
+
+    @SerializedName("popularity")
     private double popularity;
+
     private boolean isPurchased;
+
+    private boolean isFavorite;
 
     public boolean isPurchased() {
         return isPurchased;
@@ -30,6 +54,15 @@ public class MovieDataModel implements Serializable {
 
     public void setMovieBackground(String movieBackground) {
         this.movieBackground = movieBackground;
+    }
+
+
+    public boolean isFavorite() {
+        return isFavorite;
+    }
+
+    public void setIsFavorite(boolean isFavorite) {
+        this.isFavorite = isFavorite;
     }
 
     public void setIsPurchased(boolean isPurchased) {

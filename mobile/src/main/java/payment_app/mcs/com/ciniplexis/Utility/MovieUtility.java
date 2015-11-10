@@ -14,9 +14,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-import payment_app.mcs.com.ciniplexis.Contracts.DataContracts;
-import payment_app.mcs.com.ciniplexis.Contracts.MovieEntry;
-import payment_app.mcs.com.ciniplexis.Model.MovieDataModel;
+import payment_app.mcs.com.ciniplexis.ContentProvider.AutoMovieContentProvider;
+import payment_app.mcs.com.ciniplexis.Interfaces.DB.MovieColumns;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.MovieDataModel;
 
 /**
  * Created by ogayle on 28/10/2015.
@@ -34,112 +34,96 @@ public class MovieUtility {
     /*
     * API Constants
     * */
-    public static final String SORT_CRITERIA = "sort_criteria";
+
+
+    public static final String API_KEY = "273abd1f83b363bf5c91521f9ad8b9c0";
+
+    public static final String DISCOVER_MOVIE = "discover/movie";
+    public static final String BASE_URL = "http://api.themoviedb.org/3/";
     public static final String START_DATE = "start_date";
     public static final String END_DATE = "end_date";
     public static final String CRITERIA_POPULARITY = "popularity.desc";
     public static final String CRITERIA_RATING = "vote_average.desc";
     public static final String CRITERIA_DATE = "release_date.desc";
-    public static String sortQuery = "sort_by=" + SORT_CRITERIA;
 
     public static final String MOVIE_URI = "URI";
     public static final String REQUEST_URL = "URL";
-    private static final String API_KEY = "xxx-xxx-xxx";
-
-    public static final String DISCOVERY_PARAM = "discovery_parameter";
-    public static String baseQuery = "http://api.themoviedb.org/3/discover/movie?" + DISCOVERY_PARAM + "&api_key=" + API_KEY;
-    public static String movieByDate = "primary_release_date.gte=" + START_DATE + "&primary_release_date.lte=" + END_DATE;
 
     public static MovieDataModel getMovieDataFromCursor(Cursor movieCursor) {
         MovieDataModel movie = new MovieDataModel();
-        int index = movieCursor.getColumnIndex(MovieEntry._ID);
+        int index = movieCursor.getColumnIndex(MovieColumns._ID);
         movie.setId(movieCursor.getInt(index));
 
-        index = movieCursor.getColumnIndex(MovieEntry.COLUMN_TITLE);
+        index = movieCursor.getColumnIndex(MovieColumns.TITLE);
         movie.setTitle(movieCursor.getString(index));
 
-        index = movieCursor.getColumnIndex(MovieEntry.COLUMN_PLOT);
+        index = movieCursor.getColumnIndex(MovieColumns.PLOT);
         movie.setPlot(movieCursor.getString(index));
 
-        index = movieCursor.getColumnIndex(MovieEntry.COLUMN_RATING);
+        index = movieCursor.getColumnIndex(MovieColumns.RATING);
         movie.setRating(movieCursor.getDouble(index));
 
-        index = movieCursor.getColumnIndex(MovieEntry.COLUMN_RELEASE_DATE);
+        index = movieCursor.getColumnIndex(MovieColumns.RELEASE_DATE);
         movie.setReleaseDate(movieCursor.getString(index));
 
-        index = movieCursor.getColumnIndex(MovieEntry.COLUMN_PRICE);
+        index = movieCursor.getColumnIndex(MovieColumns.PRICE);
         movie.setPrice(movieCursor.getDouble(index));
 
-        index = movieCursor.getColumnIndex(MovieEntry.COLUMN_IMAGE_URL);
+        index = movieCursor.getColumnIndex(MovieColumns.IMAGE);
         movie.setImageUrl(movieCursor.getString(index));
 
-        index = movieCursor.getColumnIndex(MovieEntry.COLUMN_BACKGROUND_IMAGE_URL);
+        index = movieCursor.getColumnIndex(MovieColumns.BACKGROUND_IMAGE);
         movie.setMovieBackground(movieCursor.getString(index));
 
-        index = movieCursor.getColumnIndex(MovieEntry.COLUMN_AVERAGE_POPULARITY);
+        index = movieCursor.getColumnIndex(MovieColumns.POPULARITY);
         movie.setPopularity(movieCursor.getDouble(index));
 
-        index = movieCursor.getColumnIndex(MovieEntry.COLUMN_IS_PURCHASED);
+        index = movieCursor.getColumnIndex(MovieColumns.IS_PURCHASED);
         movie.setIsPurchased((movieCursor.getInt(index) != 0));
+
+        index = movieCursor.getColumnIndex(MovieColumns.IS_FAVORITE);
+        movie.setIsFavorite((movieCursor.getInt(index) != 0));
         return movie;
     }
 
     public static long saveMovies(Context mContext, ArrayList<MovieDataModel> movies) {
         Cursor movieCursor = mContext.getApplicationContext().getContentResolver()
-                .query(MovieEntry.CONTENT_URI,
+                .query(AutoMovieContentProvider.Movie.CONTENT_URI,
                         null,
                         null,
                         null,
                         null);
         long retVal = 0;
 
-        if (movieCursor != null) {
-            if (movieCursor.getCount() == 0)
-                retVal = addAllMovies(mContext, movies);
-            else {
-                movieCursor.close();
-                if (movies != null) {
-                    for (MovieDataModel movie : movies) {
+        if (movies == null) return retVal;
+        if (movieCursor == null) return retVal;
 
-                        String[] selectionArgs = new String[1];
-                        String selection = MovieEntry._ID + "= ?";
-                        selectionArgs[0] = String.valueOf(movie.getId());
+        int count = movieCursor.getCount();
+        movieCursor.close();
 
-                        movieCursor = mContext.getApplicationContext().getContentResolver()
-                                .query(MovieEntry.CONTENT_URI,
-                                        new String[]{MovieEntry._ID},
-                                        selection,
-                                        selectionArgs,
-                                        null);
-                        if (movieCursor != null) {
-                            if (!movieCursor.moveToFirst())
-                                retVal = addMovie(mContext, movie);
-                            else
-                                retVal = updateMovie(mContext, movie);
 
-                            movieCursor.close();
-                        }
-                    }
-                }
-
+        if (count == 0) return addAllMovies(mContext, movies);
+        else
+            for (MovieDataModel movie : movies) {
+                retVal = addMovie(mContext, movie);
             }
 
 
-        }
         return retVal;
 
     }
 
-    public static int addAllMovies(Context mContext, ArrayList<MovieDataModel> movies) {
+    private static int addAllMovies(Context mContext, ArrayList<MovieDataModel> movies) {
         int numOFRows = 0;
         if (movies != null) {
             ContentValues[] cvList = new ContentValues[movies.size()];
             int i = 0;
             for (MovieDataModel movie : movies) {
+
                 cvList[i] = createMovieContentValues(movie);
                 i++;
             }
-            numOFRows = mContext.getContentResolver().bulkInsert(MovieEntry.CONTENT_URI, cvList);
+            numOFRows = mContext.getContentResolver().bulkInsert(AutoMovieContentProvider.Movie.CONTENT_URI, cvList);
         }
 
         return numOFRows;
@@ -147,19 +131,58 @@ public class MovieUtility {
 
     public static long addMovie(Context mContext, MovieDataModel movie) {
         ContentValues addCv = createMovieContentValues(movie);
-        Uri addUri = mContext.getContentResolver().insert(MovieEntry.CONTENT_URI, addCv);
+        String[] selectionArgs = new String[1];
+        String selection = MovieColumns._ID + "= ?";
+        selectionArgs[0] = String.valueOf(movie.getId());
 
+        Cursor movieCursor = mContext.getApplicationContext().getContentResolver()
+                .query(AutoMovieContentProvider.Movie.CONTENT_URI,
+                        new String[]{MovieColumns._ID},
+                        selection,
+                        selectionArgs,
+                        null);
+        if (movieCursor == null) return -1;
+        if (movieCursor.moveToFirst()) return 0;
+
+        movieCursor.close();
+        Uri addUri = mContext.getContentResolver().insert(AutoMovieContentProvider.Movie.CONTENT_URI, addCv);
         return ContentUris.parseId(addUri);
     }
 
     public static int updateMovie(Context mContext, MovieDataModel movie) {
         String[] selectionArgs = new String[1];
-        String selection = MovieEntry._ID + "= ?";
+        String selection = MovieColumns._ID + "= ?";
         selectionArgs[0] = String.valueOf(movie.getId());
         ContentValues updateCv = createMovieContentValues(movie);
 
-        return mContext.getContentResolver().update(MovieEntry.CONTENT_URI, updateCv, selection, selectionArgs);
+        return mContext.getContentResolver().update(AutoMovieContentProvider.Movie.CONTENT_URI, updateCv, selection, selectionArgs);
     }
+
+    public static ContentValues createMovieContentValues(MovieDataModel movie) {
+        ContentValues cv = new ContentValues();
+        cv.put(MovieColumns._ID, movie.getId());
+        cv.put(MovieColumns.TITLE, movie.getTitle());
+        cv.put(MovieColumns.PLOT, movie.getPlot());
+        cv.put(MovieColumns.RATING, movie.getRating());
+        cv.put(MovieColumns.RELEASE_DATE, movie.getReleaseDate());
+        cv.put(MovieColumns.PRICE, movie.getPrice());
+        cv.put(MovieColumns.IMAGE, movie.getImageUrl());
+        cv.put(MovieColumns.BACKGROUND_IMAGE, movie.getMovieBackground());
+        cv.put(MovieColumns.POPULARITY, movie.getPopularity());
+        cv.put(MovieColumns.IS_PURCHASED, movie.isPurchased());
+        cv.put(MovieColumns.IS_FAVORITE, movie.isFavorite());
+
+        return cv;
+    }
+
+    public static SharedPreferences getMovieSharedPreference(Context myContext) {
+        if (myContext == null)
+            return null;
+
+        return myContext.getSharedPreferences(MOVIE_PREF, Context.MODE_PRIVATE);
+
+    }
+
 
     public static void parseMoviesFromJSONString(Context mContext, String jsonMovieList, String url) {
         final String PAGE = "page";
@@ -200,12 +223,7 @@ public class MovieUtility {
             }
 
             saveMovies(mContext, movies);
-            SharedPreferences movieSetting = getMovieSharedPreference(mContext);
-            SharedPreferences.Editor movieSettingEditor = movieSetting.edit();
 
-            movieSettingEditor.putString(LAST_VISITED_URL_PREF, url);
-            movieSettingEditor.putInt(PAGE_INDEX_PREF, page);
-            movieSettingEditor.apply();
 
             Log.v("Response", jsonMovieList);
 
@@ -215,30 +233,4 @@ public class MovieUtility {
             Log.e("doInB:MContentProvider", e.getMessage());
         }
     }
-
-    public static ContentValues createMovieContentValues(MovieDataModel movie) {
-        ContentValues cv = new ContentValues();
-        cv.put(MovieEntry._ID, movie.getId());
-        cv.put(MovieEntry.COLUMN_TITLE, movie.getTitle());
-        cv.put(MovieEntry.COLUMN_PLOT, movie.getPlot());
-        cv.put(MovieEntry.COLUMN_RATING, movie.getRating());
-        cv.put(MovieEntry.COLUMN_RELEASE_DATE, movie.getReleaseDate());
-        cv.put(MovieEntry.COLUMN_PRICE, movie.getPrice());
-        cv.put(MovieEntry.COLUMN_IMAGE_URL, movie.getImageUrl());
-        cv.put(MovieEntry.COLUMN_BACKGROUND_IMAGE_URL, movie.getMovieBackground());
-        cv.put(MovieEntry.COLUMN_AVERAGE_POPULARITY, movie.getPopularity());
-        cv.put(MovieEntry.COLUMN_IS_PURCHASED, movie.isPurchased());
-
-        return cv;
-    }
-
-    public static SharedPreferences getMovieSharedPreference(Context myContext) {
-        if (myContext == null)
-            return null;
-
-        return myContext.getSharedPreferences(MOVIE_PREF, Context.MODE_PRIVATE);
-
-    }
-
-
 }

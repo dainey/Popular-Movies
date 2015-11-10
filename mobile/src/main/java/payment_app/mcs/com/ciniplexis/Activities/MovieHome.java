@@ -12,15 +12,17 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import payment_app.mcs.com.ciniplexis.Interfaces.MovieCallback;
-import payment_app.mcs.com.ciniplexis.Interfaces.MovieDetailsCallBack;
+import payment_app.mcs.com.ciniplexis.Interfaces.CallBacks.MovieCallback;
+import payment_app.mcs.com.ciniplexis.Interfaces.CallBacks.MovieDetailsCallBack;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.MovieDataModel;
 import payment_app.mcs.com.ciniplexis.R;
+import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
 
 /**
  * Created by ogayle on 25/10/2015.
  */
 public class MovieHome extends AppCompatActivity
-        implements MovieCallback,
+        implements
         MovieDetailsCallBack,
         NavigationView.OnNavigationItemSelectedListener {
 
@@ -89,19 +91,9 @@ public class MovieHome extends AppCompatActivity
         return true;
     }
 
-    @Override
-    public void removeReservation(int movieId) {
-
-    }
-
-    @Override
-    public void reserveMovieTicket(int movieId) {
-
-    }
 
     @Override
     public void displayDetails(Uri dataUri) {
-
         Intent movieDetailsIntent = new Intent(this, MovieDetails.class);
         movieDetailsIntent.setData(dataUri);
         startActivity(movieDetailsIntent);

@@ -2,7 +2,7 @@
     package="payment_app.mcs.com.ciniplexis">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>s
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />s
 
     <application
         android:allowBackup="true"
@@ -44,7 +44,7 @@
         </activity>
 
         <provider
-            android:name=".ContentProvider.MovieContentProvider"
+            android:name="payment_app.mcs.com.ciniplexis.providers.AutoMovieContentProvider"
             android:authorities="payment_app.mcs.com.ciniplexis" />
 
         <service
