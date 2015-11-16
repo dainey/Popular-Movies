@@ -78,6 +78,8 @@ public class MovieCursorRecyclerAdapter extends CursorRecyclerAdapter<MovieViewM
         if (movie.isFavorite()) {
             holder.setFavourite(favorite);
         }
+        else
+        holder.setFavourite(null);
 
 
         Picasso.with(_activity)

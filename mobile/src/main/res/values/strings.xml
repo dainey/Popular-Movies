@@ -42,4 +42,9 @@
     <string name="trailer_unavailable">Trailer Unavailable</string>
     <string name="trailer_tab">Trailers</string>
     <string name="share">Share</string>
+    <string name="sort_favorite">Sort By Favorites</string>
+    <string name="sort_popularity">Sort By Popularity</string>
+    <string name="sort_rating">Sort By Rating</string>
+    <string name="now_showing">In Theatre</string>
+    <string name="coming_soon_lbl">Coming Soon</string>
 </resources>

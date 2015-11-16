@@ -41,8 +41,9 @@ public class HelperUtility {
     * API Constants
     * */
 
+    public static final String YOUTUBE_WATCH = "http://www.youtube.com/watch?v=";
 
-    public static final String API_KEY = "273abd1f83b363bf5c91521f9ad8b9c0";
+    public static final String API_KEY = "xxx-xxx-xxx";
     public static final String DISCOVER_MOVIE = "discover/movie";
     public static final String MOVIE_VIDEOS = "movie/{id}/videos";
     public static final String MOVIE_REVIEWS = "movie/{id}/reviews";

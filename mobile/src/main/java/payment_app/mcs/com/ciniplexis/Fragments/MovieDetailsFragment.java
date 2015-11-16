@@ -1,7 +1,5 @@
 package payment_app.mcs.com.ciniplexis.Fragments;
 
-
-import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.content.Intent;
 import android.database.Cursor;
@@ -18,7 +16,6 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.AppCompatRatingBar;
 import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -173,7 +170,6 @@ public class MovieDetailsFragment extends Fragment
                 @Override
                 public void onClick(View v) {
                     startActivity(shareMovieTrailer(video.getKey()));
-                    //Toast.makeText(getContext(), "Start video via intent with youtube " + video.getName(), Toast.LENGTH_SHORT).show();
                 }
             });
         } while (data.moveToNext());
@@ -199,8 +195,8 @@ public class MovieDetailsFragment extends Fragment
     }
 
     private Intent shareMovieTrailer(String key) {
-        String youtubeUrl = "http://www.youtube.com/watch?v=";
-        Intent shareIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(youtubeUrl + key));
+
+        Intent shareIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(HelperUtility.YOUTUBE_WATCH + key));
 
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
 

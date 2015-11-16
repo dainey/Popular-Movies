@@ -16,7 +16,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
-import android.view.ContextMenu;
+
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,12 +48,13 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
 
     private boolean loading = false;
     private int scrollPosition = -1;
+
     @Bind(R.id.movie_list)
     RecyclerView rvMovieContainer;
 
-    //@Bind(R.id.toolbar)
+
     Toolbar toolbar;
-    //    private Toolbar toolbar;
+
     private static SharedPreferences movieSettings;
     private Uri filterUri;
     private static final int MOVIE_LOADER_ID = 100;
@@ -124,8 +125,7 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
-
+    public boolean onOptionsItemSelected(MenuItem item) {
         String param1;
         String param2;
         Calendar calendar;
@@ -159,7 +159,7 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
                 filterUri = AutoMovieContentProvider.Movie.buildMovieUriWithDates(param1, param2);
                 break;
 
-            case R.id.date:
+            case R.id.coming_soon:
                 dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                 calendar = Calendar.getInstance();
 
@@ -184,16 +184,6 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
         return true;
     }
 
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        menu.setHeaderTitle("Filter Movies");
-        menu.add(R.menu.movie_menu_filter, R.id.favorite, 0, "Favorites");
-        menu.add(R.menu.movie_menu_filter, R.id.popularity, 0, "By Popularity");
-        menu.add(R.menu.movie_menu_filter, R.id.rating, 1, "By Rating");
-        menu.add(R.menu.movie_menu_filter, R.id.now_showing, 2, "In Theatres");
-        menu.add(R.menu.movie_menu_filter, R.id.date, 3, "Coming Soon");
-    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -221,16 +211,6 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
 
         if (getView() == null)
             return;
-
-        final FloatingActionButton filterMovies = (FloatingActionButton) getView().findViewById(R.id.sort_movies);
-        registerForContextMenu(filterMovies);
-        filterMovies.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getActivity().openContextMenu(filterMovies);
-            }
-        });
-
 
         getLoaderManager().initLoader(MOVIE_LOADER_ID, null, this);
     }
