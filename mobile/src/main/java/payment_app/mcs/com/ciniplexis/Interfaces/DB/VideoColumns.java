@@ -3,7 +3,6 @@ package payment_app.mcs.com.ciniplexis.Interfaces.DB;
 import android.provider.BaseColumns;
 
 import net.simonvt.schematic.annotation.DataType;
-import net.simonvt.schematic.annotation.DataType.Type;
 import net.simonvt.schematic.annotation.NotNull;
 import net.simonvt.schematic.annotation.PrimaryKey;
 import net.simonvt.schematic.annotation.References;
@@ -11,27 +10,33 @@ import net.simonvt.schematic.annotation.References;
 import payment_app.mcs.com.ciniplexis.Data.AutoMovieDB;
 
 /**
- * Created by ogayle on 09/11/2015.
+ * Created by ogayle on 12/11/2015.
  */
-public interface ReviewColumns {
-    @DataType(Type.TEXT)
+public interface VideoColumns {
+    @DataType(DataType.Type.TEXT)
     @PrimaryKey
     String _ID = BaseColumns._ID;
 
-    @DataType(Type.TEXT)
+    @DataType(DataType.Type.TEXT)
+    String ISO_LANGUAGE = "iso_language";
+
+    @DataType(DataType.Type.TEXT)
     @NotNull
-    String USERNAME = "username";
+    String NAME = "name";
 
-    @DataType(Type.TEXT)
-    String COMMENT = "comment";
+    @DataType(DataType.Type.TEXT)
+    String KEY = "key";
 
-    @DataType(Type.TEXT)
-    String COMMENT_DATE = "comment_date";
+    @DataType(DataType.Type.TEXT)
+    String SITE = "site";
 
-    @DataType(Type.TEXT)
-    String COMMENT_URL = "comment_url";
+    @DataType(DataType.Type.TEXT)
+    String SIZE = "size";
 
-    @DataType(Type.INTEGER)
+    @DataType(DataType.Type.TEXT)
+    String TYPE = "type";
+
+    @DataType(DataType.Type.INTEGER)
     @References(table = AutoMovieDB.MOVIE, column = MovieColumns._ID)
     String FK_MOVIE_ID = "fk_movie_id";
 }

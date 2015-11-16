@@ -4,19 +4,21 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import payment_app.mcs.com.ciniplexis.Interfaces.CallBacks.MovieCallback;
+import payment_app.mcs.com.ciniplexis.Fragments.MovieDetailsFragment;
 import payment_app.mcs.com.ciniplexis.Interfaces.CallBacks.MovieDetailsCallBack;
-import payment_app.mcs.com.ciniplexis.Model.DataModels.MovieDataModel;
 import payment_app.mcs.com.ciniplexis.R;
-import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
+import payment_app.mcs.com.ciniplexis.Utility.HelperUtility;
 
 /**
  * Created by ogayle on 25/10/2015.
@@ -26,6 +28,8 @@ public class MovieHome extends AppCompatActivity
         MovieDetailsCallBack,
         NavigationView.OnNavigationItemSelectedListener {
 
+    private boolean mTwoPane = false;
+    private static final String MOVIE_DETAILS_FRAG_TAG = "MDFTAG";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,8 +48,23 @@ public class MovieHome extends AppCompatActivity
         drawerLayout.setDrawerListener(toggle);
         toggle.syncState();
 
+        if (findViewById(R.id.details_container) != null) {
+            mTwoPane = true;
+
+            if (savedInstanceState == null)
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.details_container, new MovieDetailsFragment(), MOVIE_DETAILS_FRAG_TAG)
+                        .commit();
+
+        } else mTwoPane = false;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i("onResume", "Resumed");
+    }
 
     @Override
     public void onBackPressed() {
@@ -94,9 +113,21 @@ public class MovieHome extends AppCompatActivity
 
     @Override
     public void displayDetails(Uri dataUri) {
-        Intent movieDetailsIntent = new Intent(this, MovieDetails.class);
-        movieDetailsIntent.setData(dataUri);
-        startActivity(movieDetailsIntent);
+        if (mTwoPane) {
+            Bundle bundle = new Bundle();
+            bundle.putParcelable(HelperUtility.MOVIE_URI, dataUri);
+
+            MovieDetailsFragment movieDetailsFragment = new MovieDetailsFragment();
+            movieDetailsFragment.setArguments(bundle);
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.details_container, movieDetailsFragment, MOVIE_DETAILS_FRAG_TAG)
+                    .commit();
+        } else {
+            Intent movieDetailsIntent = new Intent(this, MovieDetails.class);
+            movieDetailsIntent.setData(dataUri);
+            startActivity(movieDetailsIntent);
+        }
 
     }
 }

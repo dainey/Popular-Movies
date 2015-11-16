@@ -11,6 +11,14 @@
 
     <color name="movie_card_bg">#FFF9C4</color>
     <color name="dividerColor">#B6B6B6</color>
+    <color name="accent_green">#4CAF50</color>
+    <color name="primary_red">#F44336</color>
+    <color name="secondary_blue">#B3E5FC</color>
+    <color name="accent_blue">#448AFF</color>
+
+    <color name="yellow_lime_accent">#CDDC39</color>
+    <color name="yellow_green_light">#C8E6C9</color>
+    <color name="yellow_green_primary">#4CAF50</color>
 
     <color name="rating_empty">#FFF59D</color>
 </resources>

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 /**
  * Created by ogayle on 03/11/2015.
  */
-public class PageDataModel {
+public class MoviePageDataModel  {
 
     @SerializedName("page")
     private int page;

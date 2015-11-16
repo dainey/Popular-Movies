@@ -5,8 +5,6 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -25,20 +23,21 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.content.Intent;
-import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import payment_app.mcs.com.ciniplexis.Contracts.MovieEntry;
 import payment_app.mcs.com.ciniplexis.Features.adapters.MovieCursorRecyclerAdapter;
+import payment_app.mcs.com.ciniplexis.Interfaces.DB.MovieColumns;
 import payment_app.mcs.com.ciniplexis.R;
-import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
+import payment_app.mcs.com.ciniplexis.Utility.HelperUtility;
 import payment_app.mcs.com.ciniplexis.Utility.WebController;
 import payment_app.mcs.com.ciniplexis.ContentProvider.AutoMovieContentProvider;
 
@@ -47,15 +46,18 @@ import payment_app.mcs.com.ciniplexis.ContentProvider.AutoMovieContentProvider;
  */
 public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private boolean loading = false;
+    private int scrollPosition = -1;
     @Bind(R.id.movie_list)
     RecyclerView rvMovieContainer;
 
-    @Bind(R.id.toolbar)
+    //@Bind(R.id.toolbar)
     Toolbar toolbar;
     //    private Toolbar toolbar;
     private static SharedPreferences movieSettings;
     private Uri filterUri;
     private static final int MOVIE_LOADER_ID = 100;
+    private static final String SCROLL_POSITION = "SCROLL_POS";
 
     @Nullable
     @Override
@@ -64,7 +66,7 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
         setHasOptionsMenu(true);
         ButterKnife.bind(this, fragMovieListPage);
 
-        //rvMovieContainer = (RecyclerView) fragMovieListPage.findViewById(R.id.movie_list);
+
         final StaggeredGridLayoutManager sGridLayout = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         sGridLayout.setGapStrategy(StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS);
         rvMovieContainer.setLayoutManager(sGridLayout);
@@ -78,11 +80,24 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
                 int[] positions = sGridLayout.findLastCompletelyVisibleItemPositions(null);
                 int count = (rvMovieContainer.getAdapter().getItemCount() - 10);
 
+
                 for (int pos : positions) {
-                    if (pos == count && filterUri != null) {
-                        resolveServerQuery(false);
-                        return;
-                    }
+                    if (!loading)
+                        if (pos >= count && filterUri != null) {
+                            resolveServerQuery(false);
+                            loading = true;
+
+                            TimerTask tTask = new TimerTask() {
+                                @Override
+                                public void run() {
+                                    loading = false;
+                                }
+                            };
+                            Timer t = new Timer("loadingTimeOut");
+                            t.schedule(tTask, 25);
+
+                            return;
+                        }
                 }
             }
 
@@ -112,19 +127,22 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
     public boolean onContextItemSelected(MenuItem item) {
 
         String param1;
-        String param2 = null;
+        String param2;
         Calendar calendar;
         DateFormat dateFormat;
 
-        boolean isSort = true;
-
-
         switch (item.getItemId()) {
+
+            case R.id.favorite:
+                filterUri = AutoMovieContentProvider.Movie.buildMovieFavoriteView();
+
+                break;
             case R.id.popularity:
-                param1 = "popularity";
+                filterUri = AutoMovieContentProvider.Movie.buildMoviePopularityView();
+
                 break;
             case R.id.rating:
-                param1 = "rating";
+                filterUri = AutoMovieContentProvider.Movie.buildMovieByRatingView();
 
                 break;
             case R.id.now_showing:
@@ -137,7 +155,8 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
                 param2 = dateFormat.format(calendar.getTime());
 
                 toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.in_theatres)));
-                isSort = false;
+
+                filterUri = AutoMovieContentProvider.Movie.buildMovieUriWithDates(param1, param2);
                 break;
 
             case R.id.date:
@@ -151,16 +170,13 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
                 param2 = dateFormat.format(calendar.getTime());
 
                 toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.coming_soon)));
-                isSort = false;
+
+                filterUri = AutoMovieContentProvider.Movie.buildMovieUriWithDates(param1, param2);
                 break;
             default:
                 return false;
         }
 
-        if (isSort)
-            filterUri = AutoMovieContentProvider.Movie.sortByCriteria(param1);
-        else
-            filterUri = AutoMovieContentProvider.Movie.buildMovieUriWithDates(param1, param2);//MovieEntry.buildMovieUriWithDates(param1, param2);
 
         resolveServerQuery(true);
         getLoaderManager().restartLoader(MOVIE_LOADER_ID, null, this);
@@ -172,6 +188,7 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         menu.setHeaderTitle("Filter Movies");
+        menu.add(R.menu.movie_menu_filter, R.id.favorite, 0, "Favorites");
         menu.add(R.menu.movie_menu_filter, R.id.popularity, 0, "By Popularity");
         menu.add(R.menu.movie_menu_filter, R.id.rating, 1, "By Rating");
         menu.add(R.menu.movie_menu_filter, R.id.now_showing, 2, "In Theatres");
@@ -179,12 +196,18 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(SCROLL_POSITION, scrollPosition);
+    }
+
+    @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        //toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
-        movieSettings = MovieUtility.getMovieSharedPreference(getContext());
-        String filterUriStr = movieSettings.getString(MovieUtility.FILTER_URI_PREF, null);
+        toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        movieSettings = HelperUtility.getMovieSharedPreference(getContext());
+        String filterUriStr = movieSettings.getString(HelperUtility.FILTER_URI_PREF, null);
 
         if (filterUriStr != null)
             filterUri = Uri.parse(filterUriStr);
@@ -214,19 +237,19 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
 
     private void resolveServerQuery(boolean isFirstPage) {
         String filterUriStr = filterUri.toString();
-        boolean isFilter = filterUriStr.contains(MovieUtility.START_DATE);
+        boolean isFilter = filterUriStr.contains(HelperUtility.START_DATE);
         WebController webController = new WebController(getContext());
 
         int page = 1;
         if (!isFirstPage)
-            page = MovieUtility.getMovieSharedPreference(getContext()).getInt(MovieUtility.PAGE_INDEX_PREF, 0) + 1;
+            page = HelperUtility.getMovieSharedPreference(getContext()).getInt(HelperUtility.PAGE_INDEX_PREF, 0) + 1;
 
 
         if (isFilter) {
             ////// TODO: 03/11/2015 do date diff to choose appropriate title
             toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.date)));
-            String start = filterUri.getQueryParameter(MovieUtility.START_DATE);
-            String end = filterUri.getQueryParameter(MovieUtility.END_DATE);
+            String start = filterUri.getQueryParameter(HelperUtility.START_DATE);
+            String end = filterUri.getQueryParameter(HelperUtility.END_DATE);
 
             webController.getMostBetweenDates(start, end, page);
 
@@ -270,7 +293,7 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
                 if (newText.isEmpty())
                     return true;
 
-                filterUri = MovieEntry.buildMovieUriWithTitleFilter(newText);
+                filterUri = AutoMovieContentProvider.Movie.buildMovieUriWithTitleFilter(newText);
                 getLoaderManager().restartLoader(MOVIE_LOADER_ID, null, MovieHomeFragment.this);
 
                 return true;
@@ -287,18 +310,46 @@ public class MovieHomeFragment extends Fragment implements LoaderManager.LoaderC
     public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
 
-        movieSettings = MovieUtility.getMovieSharedPreference(getContext());
+        movieSettings = HelperUtility.getMovieSharedPreference(getContext());
         SharedPreferences.Editor movieSettingsEditor = movieSettings.edit();
-        movieSettingsEditor.putString(MovieUtility.FILTER_URI_PREF, filterUri.toString());
+        movieSettingsEditor.putString(HelperUtility.FILTER_URI_PREF, filterUri.toString());
         movieSettingsEditor.apply();
 
-        return new CursorLoader(getActivity(), filterUri, null, null, null, null);
+        String filterUriStr = filterUri.toString();
+        boolean isDateFilter = filterUriStr.contains(HelperUtility.START_DATE);
+        boolean isTitleFilter = filterUriStr.contains("f_name");
+        String[] selectionArgs = null;
+        String selection = null;
+
+        if (isDateFilter) {
+            toolbar.setTitle(String.format("%s : %s", getString(R.string.app_name), getString(R.string.date)));
+            String start = filterUri.getQueryParameter(HelperUtility.START_DATE);
+            String end = filterUri.getQueryParameter(HelperUtility.END_DATE);
+            selectionArgs = new String[]{start, end};
+            selection = MovieColumns.RELEASE_DATE + " BETWEEN ? AND ? ";
+        }
+
+        if (isTitleFilter) {
+            String title = filterUri.getLastPathSegment();
+            selectionArgs = new String[]{"%" + title, title + "%", "%" + title + "%"};
+            selection = MovieColumns.TITLE + " like ? OR "
+                    + MovieColumns.TITLE + " like ? OR "
+                    + MovieColumns.TITLE + " like ? ";
+        }
+
+
+        return new CursorLoader(getActivity(), filterUri, null, selection, selectionArgs, null);
     }
 
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
-        if (rvMovieContainer != null)
-            ((MovieCursorRecyclerAdapter) rvMovieContainer.getAdapter()).swapCursor(data);
+        if (rvMovieContainer != null) {
+            MovieCursorRecyclerAdapter movieCursorAdapter = ((MovieCursorRecyclerAdapter) rvMovieContainer.getAdapter());
+            movieCursorAdapter.swapCursor(data);
+
+        }
+
+        loading = false;
     }
 
     @Override

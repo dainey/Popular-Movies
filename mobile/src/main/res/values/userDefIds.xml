@@ -5,4 +5,5 @@
     <item name="rating"  type="id" format="string"/>
     <item name="now_showing" type="id" format="string"/>
     <item name="date" type="id" format="string" />
+    <item name="favorite" type="id" format="string" />
 </resources>

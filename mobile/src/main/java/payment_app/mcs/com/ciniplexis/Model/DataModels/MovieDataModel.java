@@ -10,9 +10,7 @@ import java.io.Serializable;
 /**
  * Created by ogayle on 26/10/2015.
  */
-public class MovieDataModel implements Serializable {
-    @SerializedName("id")
-    private int Id;
+public class MovieDataModel extends BaseEntity implements Serializable {
 
     @SerializedName("title")
     private String title;
@@ -56,6 +54,11 @@ public class MovieDataModel implements Serializable {
         this.movieBackground = movieBackground;
     }
 
+    @Override
+    public Integer getId() {
+        return ((Number) super.getId()).intValue();
+    }
+
 
     public boolean isFavorite() {
         return isFavorite;
@@ -69,13 +72,6 @@ public class MovieDataModel implements Serializable {
         this.isPurchased = isPurchased;
     }
 
-    public int getId() {
-        return Id;
-    }
-
-    public void setId(int id) {
-        Id = id;
-    }
 
     public String getImageUrl() {
         return imageUrl;

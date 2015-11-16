@@ -14,20 +14,14 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
 
 import payment_app.mcs.com.ciniplexis.Interfaces.API.MovieHubService;
-import payment_app.mcs.com.ciniplexis.Model.DataModels.MovieDataModel;
-import payment_app.mcs.com.ciniplexis.Model.DataModels.PageDataModel;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.MoviePageDataModel;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.ReviewDataModel;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.ReviewPageDataModel;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.VideoCollection;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.VideoDataModel;
 import payment_app.mcs.com.ciniplexis.R;
 import retrofit.CallAdapter;
 import retrofit.GsonConverterFactory;
@@ -56,7 +50,7 @@ public class WebController {
             Toast.makeText(mContext, R.string.net_unavailable, Toast.LENGTH_SHORT).show();
             return;
         }
-        subscribeToPageSubscriber(movieHubService.getMoviesSortBy(MovieUtility.CRITERIA_POPULARITY, page));
+        subscribeToPageSubscriber(movieHubService.getMoviesSortBy(HelperUtility.CRITERIA_POPULARITY, page));
 
     }
 
@@ -65,7 +59,7 @@ public class WebController {
             Toast.makeText(mContext, R.string.net_unavailable, Toast.LENGTH_SHORT).show();
             return;
         }
-        subscribeToPageSubscriber(movieHubService.getMoviesSortBy(MovieUtility.CRITERIA_RATING, page));
+        subscribeToPageSubscriber(movieHubService.getMoviesSortBy(HelperUtility.CRITERIA_RATING, page));
     }
 
     public void getMostRecent(int page) {
@@ -73,7 +67,7 @@ public class WebController {
             Toast.makeText(mContext, R.string.net_unavailable, Toast.LENGTH_SHORT).show();
             return;
         }
-        subscribeToPageSubscriber(movieHubService.getMoviesSortBy(MovieUtility.CRITERIA_DATE, page));
+        subscribeToPageSubscriber(movieHubService.getMoviesSortBy(HelperUtility.CRITERIA_DATE, page));
     }
 
     public void getMostBetweenDates(String startDate, String endDate, int page) {
@@ -84,10 +78,86 @@ public class WebController {
         subscribeToPageSubscriber(movieHubService.getMovieBetweenDates(startDate, endDate, page));
     }
 
-    private void subscribeToPageSubscriber(Observable<PageDataModel> pageObserver) {
+    public void getVideos(final int movieId) {
+        if (!isNetworkAvailable()) {
+            Toast.makeText(mContext, R.string.net_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        movieHubService.getTrailers(movieId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(new Subscriber<VideoCollection>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        if (mContext instanceof Activity) {
+                            final Activity activity = (Activity) mContext;
+                            activity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(activity, R.string.net_data_failed, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onNext(VideoCollection videoCollection) {
+                        for (VideoDataModel video : videoCollection.getResults()) {
+                            video.setMovieId(movieId);
+                        }
+                        new HelperUtility().saveToDatabase(mContext, videoCollection.getResults());
+                    }
+                });
+    }
+
+    public void getReviews(final int movieId) {
+        if (!isNetworkAvailable()) {
+            Toast.makeText(mContext, R.string.net_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        movieHubService.getReviews(movieId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(new Subscriber<ReviewPageDataModel>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        if (mContext instanceof Activity) {
+                            final Activity activity = (Activity) mContext;
+                            activity.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(activity, R.string.net_data_failed, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onNext(ReviewPageDataModel reviewPage) {
+                        for (ReviewDataModel reviews : reviewPage.getResults()) {
+                            reviews.setMovieId(movieId);
+                        }
+
+                        ///todo add date since Api doesnt provide any for comments
+                        new HelperUtility().saveToDatabase(mContext, reviewPage.getResults());
+                    }
+                });
+    }
+
+    private void subscribeToPageSubscriber(Observable<MoviePageDataModel> pageObserver) {
         pageObserver.subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .subscribe(new Subscriber<PageDataModel>() {
+                .subscribe(new Subscriber<MoviePageDataModel>() {
                     @Override
                     public void onCompleted() {
 
@@ -108,12 +178,12 @@ public class WebController {
                     }
 
                     @Override
-                    public void onNext(PageDataModel pageModel) {
-                        MovieUtility.saveMovies(mContext, pageModel.getResults());
-                        SharedPreferences movieSetting = MovieUtility.getMovieSharedPreference(mContext);
+                    public void onNext(MoviePageDataModel pageModel) {
+                        new HelperUtility().saveToDatabase(mContext, pageModel.getResults());
+                        SharedPreferences movieSetting = HelperUtility.getMovieSharedPreference(mContext);
                         SharedPreferences.Editor movieSettingEditor = movieSetting.edit();
 
-                        movieSettingEditor.putInt(MovieUtility.PAGE_INDEX_PREF, pageModel.getPage());
+                        movieSettingEditor.putInt(HelperUtility.PAGE_INDEX_PREF, pageModel.getPage());
                         movieSettingEditor.apply();
                     }
                 });
@@ -130,7 +200,7 @@ public class WebController {
                 HttpUrl url = clientRequest.httpUrl();
 
 
-                HttpUrl.Builder authorizedUrl = url.newBuilder().addQueryParameter("api_key", MovieUtility.API_KEY);
+                HttpUrl.Builder authorizedUrl = url.newBuilder().addQueryParameter("api_key", HelperUtility.API_KEY);
                 Request interceptRequest = clientRequest
                         .newBuilder()
                         .url(authorizedUrl.build())
@@ -150,7 +220,7 @@ public class WebController {
 
         return new Retrofit
                 .Builder()
-                .baseUrl(MovieUtility.BASE_URL)
+                .baseUrl(HelperUtility.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(factory)
                 .client(client)

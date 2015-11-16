@@ -1,39 +1,53 @@
 package payment_app.mcs.com.ciniplexis.Fragments;
 
 
+import android.annotation.TargetApi;
 import android.app.Dialog;
+import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.CursorLoader;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.AppCompatRatingBar;
+import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.github.clans.fab.FloatingActionButton;
 import com.squareup.picasso.Picasso;
+import com.github.clans.fab.FloatingActionButton;
+
+import java.util.ArrayList;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import payment_app.mcs.com.ciniplexis.Contracts.MovieEntry;
-import payment_app.mcs.com.ciniplexis.Interfaces.CallBacks.MovieCallback;
+import payment_app.mcs.com.ciniplexis.ContentProvider.AutoMovieContentProvider;
+import payment_app.mcs.com.ciniplexis.Interfaces.DB.MovieColumns;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.ReviewDataModel;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.VideoDataModel;
 import payment_app.mcs.com.ciniplexis.Utility.Constants;
 import payment_app.mcs.com.ciniplexis.Model.DataModels.MovieDataModel;
 import payment_app.mcs.com.ciniplexis.R;
-import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
+import payment_app.mcs.com.ciniplexis.Utility.HelperUtility;
+import payment_app.mcs.com.ciniplexis.Utility.WebController;
 
 /**
  * Created by ogayle on 28/10/2015.
@@ -42,18 +56,6 @@ public class MovieDetailsFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private MovieDataModel movie;
-
-  /*  private MovieCallback movieCallback = new MovieCallback() {
-        @Override
-        public void updateFavorites(int movieId, boolean isFavorite) {
-
-        }
-
-        @Override
-        public void updateMovieTicket(int movieId, int amount, double cost) {
-
-        }
-    };*/
 
     Toolbar toolbar;
 
@@ -84,19 +86,28 @@ public class MovieDetailsFragment extends Fragment
     @Bind(R.id.mark_fav_btn)
     FloatingActionButton addFavBtn;
 
-    private static final int MOVIE_DETAILS_LOADER = 101;
+    @Bind(R.id.trailer_content)
+    LinearLayout trailer_content;
+
+    @Bind(R.id.comment_content)
+    LinearLayout comment_content;
+
+    private static final int MOVIE_LOADER = 101;
+    private static final int REVIEW_LOADER = 102;
+    private static final int VIDEO_LOADER = 103;
     private Uri mUri;
     private static String[] MOVIE_COLUMNS = {
-            MovieEntry.TABLE_NAME + "." + MovieEntry._ID,
-            MovieEntry.COLUMN_PLOT,
-            MovieEntry.COLUMN_TITLE,
-            MovieEntry.COLUMN_IMAGE_URL,
-            MovieEntry.COLUMN_AVERAGE_POPULARITY,
-            MovieEntry.COLUMN_IS_PURCHASED,
-            MovieEntry.COLUMN_RATING,
-            MovieEntry.COLUMN_BACKGROUND_IMAGE_URL,
-            MovieEntry.COLUMN_RELEASE_DATE,
-            MovieEntry.COLUMN_PRICE
+            MovieColumns._ID,
+            MovieColumns.PLOT,
+            MovieColumns.TITLE,
+            MovieColumns.IMAGE,
+            MovieColumns.POPULARITY,
+            MovieColumns.IS_PURCHASED,
+            MovieColumns.RATING,
+            MovieColumns.BACKGROUND_IMAGE,
+            MovieColumns.RELEASE_DATE,
+            MovieColumns.PRICE,
+            MovieColumns.IS_FAVORITE,
     };
 
     public static MovieDetailsFragment getInstance(MovieDataModel _movie) {
@@ -108,63 +119,18 @@ public class MovieDetailsFragment extends Fragment
     }
 
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Bundle args = getArguments();
-
-        if (args != null) {
-            mUri = args.getParcelable(MovieUtility.MOVIE_URI);
-        }
-        View movieDetails = inflater.inflate(R.layout.fragment_movie_details, container, false);
-        ButterKnife.bind(this, movieDetails);
-        return movieDetails;
-
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        ButterKnife.unbind(this);
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-
-      /*  if (getActivity() instanceof MovieCallback)
-            movieCallback = (MovieCallback) getActivity();
-*/
-        toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
-        getLoaderManager().initLoader(MOVIE_DETAILS_LOADER, null, this);
-        super.onActivityCreated(savedInstanceState);
-    }
-
-    @Override
-    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
-        if (mUri == null)
-            return null;
-
-        return new CursorLoader(getActivity(),
-                mUri,
-                MOVIE_COLUMNS,
-                null,
-                null,
-                null
-        );
-    }
-
-    @Override
-    public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
-
-        if (data == null || !data.moveToFirst())
-            return;
-
-        if (getView() == null)
-            return;
+    private void resolveMovieDetails(Cursor data) {
+        if (!data.moveToFirst()) return;
 
 
-        movie = MovieUtility.getMovieDataFromCursor(data);
+        movie = new HelperUtility().getMovieFromCursor(data);
+        WebController controller = new WebController(getActivity());
+
+        if (mShareActionProvider != null)
+            mShareActionProvider.setShareIntent(shareMovieInfo(movie));
+
+        controller.getReviews(movie.getId());
+        controller.getVideos(movie.getId());
 
         toolbar.setTitle(movie.getTitle());
         title.setText(movie.getTitle());
@@ -186,9 +152,76 @@ public class MovieDetailsFragment extends Fragment
 
         updateFavorite();
 
+        getLoaderManager().initLoader(REVIEW_LOADER, null, this);
+        getLoaderManager().initLoader(VIDEO_LOADER, null, this);
+    }
+
+    private void resolveVideoDetails(Cursor data) {
+        if (!data.moveToFirst()) return;
+
+        trailer_content.removeAllViews();
+        LayoutInflater inflater = getLayoutInflater(null);
+
+        do {
+            View trailerView = inflater.inflate(R.layout.fragment_trailer_item, trailer_content, false);
+            trailer_content.addView(trailerView);
+            final VideoDataModel video = new HelperUtility().getVideoFromCursor(data);
+
+            ((TextView) trailerView.findViewById(R.id.video_name)).setText(video.getName());
+            ((TextView) trailerView.findViewById(R.id.video_description)).setText(String.format("%sp %s", video.getSize(), video.getType()));
+            trailerView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(shareMovieTrailer(video.getKey()));
+                    //Toast.makeText(getContext(), "Start video via intent with youtube " + video.getName(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        } while (data.moveToNext());
 
     }
 
+    private void resolveReviewDetails(Cursor data) {
+        if (!data.moveToFirst()) return;
+
+        comment_content.removeAllViews();
+        LayoutInflater inflater = getLayoutInflater(null);
+
+        do {
+            View reviewView = inflater.inflate(R.layout.fragment_review_item, comment_content, false);
+            comment_content.addView(reviewView);
+            final ReviewDataModel review = new HelperUtility().getReviewFromCursor(data);
+            ((TextView) reviewView.findViewById(R.id.author)).setText(review.getAuthor());
+            ((TextView) reviewView.findViewById(R.id.date)).setText(review.getDate());
+            ((TextView) reviewView.findViewById(R.id.comment)).setText(String.format(" %s", review.getContent()));
+
+        } while (data.moveToNext());
+
+    }
+
+    private Intent shareMovieTrailer(String key) {
+        String youtubeUrl = "http://www.youtube.com/watch?v=";
+        Intent shareIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(youtubeUrl + key));
+
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+
+        return shareIntent;
+
+    }
+
+    private Intent shareMovieInfo(MovieDataModel movie) {
+        if (movie == null) return null;
+
+        String movieInfo = String.format("#CiniplexMovies\n#%s\nReleased: %s\nRating: %.1f \nTicket Price: $%.2f",
+                movie.getTitle(),
+                movie.getReleaseDate(),
+                movie.getRating(),
+                movie.getPrice());
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, movieInfo);
+        return shareIntent;
+    }
 
     private void updateFavorite() {
         String addToFavStr = getResources().getString(R.string.add_fav);
@@ -197,11 +230,10 @@ public class MovieDetailsFragment extends Fragment
         addFavBtn.setLabelText(movie.isFavorite() ? remFromFavStr : addToFavStr);
 
         if (movie.isFavorite()) {
-            btnColor = Color.RED;
-            Toast.makeText(getContext(), "Added to Favorites", Toast.LENGTH_SHORT).show();
+            btnColor = ContextCompat.getColor(getContext(), R.color.accent_green);
+
         } else {
-            btnColor = Color.GREEN;
-            Toast.makeText(getContext(), "Removed from Favorites", Toast.LENGTH_SHORT).show();
+            btnColor = ContextCompat.getColor(getContext(), R.color.primary_red);
         }
 
         addFavBtn.setColorNormal(btnColor);
@@ -210,6 +242,7 @@ public class MovieDetailsFragment extends Fragment
     @OnClick(R.id.buy_btn)
     public void updatePurchase(View view) {
 
+        if (movie == null) return;
         final Dialog ticketAlert = new Dialog(getContext());
         ticketAlert.setTitle("Ticket Purchase");
         ticketAlert.setContentView(R.layout.fragment_ticket_purchase);
@@ -220,6 +253,10 @@ public class MovieDetailsFragment extends Fragment
         FloatingActionButton acceptUpdateBtn = (FloatingActionButton) ticketAlert.findViewById(R.id.accept_ticket_update);
         FloatingActionButton cancelUpdateBtn = (FloatingActionButton) ticketAlert.findViewById(R.id.cancel_ticket_update);
 
+        numberPicker.setMinValue(0);
+        numberPicker.setMaxValue(25);
+        numberPicker.setValue(0);
+        numberPicker.setWrapSelectorWheel(false);
         numberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
@@ -241,8 +278,11 @@ public class MovieDetailsFragment extends Fragment
                 else
                     movie.setIsPurchased(false);
 
-                MovieUtility.updateMovie(getContext(), movie);
-                //movieCallback.updateMovieTicket(movie.getId(), numberPicker.getValue(), (movie.getPrice() * numberPicker.getValue()));
+                new HelperUtility().updateEntity(getContext(), movie);
+                ticketAlert.dismiss();
+                Snackbar.make(purchaseBtn, (numberPicker.getValue() > 0) ? "Total Tickets Purchased : " + numberPicker.getValue() : "No  Tickets Purchased", Snackbar.LENGTH_SHORT)
+                        .show();
+
             }
         });
 
@@ -253,17 +293,127 @@ public class MovieDetailsFragment extends Fragment
     @OnClick(R.id.mark_fav_btn)
     public void updateFavorite(View view) {
         if (movie == null) return;
+        String msg;
 
-        if (movie.isFavorite())
+        if (movie.isFavorite()) {
             movie.setIsFavorite(false);
-            // movieCallback.updateFavorites(movie.getId(), false);
-        else
+            msg = "Removed from Favorites";
+
+        } else {
             movie.setIsFavorite(true);
-        // movieCallback.updateFavorites(movie.getId(), true);
-        MovieUtility.updateMovie(getContext(), movie);
-        //getLoaderManager().restartLoader(MOVIE_DETAILS_LOADER, null, this);
+            msg = "Added to Favorites";
+        }
+
+        new HelperUtility().updateEntity(getContext(), movie);
+        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
     }
 
+    private ShareActionProvider mShareActionProvider;
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Bundle args = getArguments();
+        setHasOptionsMenu(true);
+        if (args != null) {
+            mUri = args.getParcelable(HelperUtility.MOVIE_URI);
+        }
+        View movieDetails = inflater.inflate(R.layout.fragment_movie_details, container, false);
+        ButterKnife.bind(this, movieDetails);
+        return movieDetails;
+
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        if (menu.findItem(R.id.share) == null)
+            inflater.inflate(R.menu.movie_details_menu, menu);
+
+        MenuItem item = menu.findItem(R.id.share);
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+        mShareActionProvider.setShareHistoryFileName(ShareActionProvider.DEFAULT_SHARE_HISTORY_FILE_NAME);
+
+        if (movie != null)
+            mShareActionProvider.setShareIntent(shareMovieInfo(movie));
+    }
+
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        toolbar = (Toolbar) getActivity().findViewById(R.id.toolbar);
+        getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        Uri entityUri = null;
+        String[] entityColumns = null;
+        switch (id) {
+            case MOVIE_LOADER:
+                if (mUri == null) return null;
+                entityUri = mUri;
+                entityColumns = MOVIE_COLUMNS;
+
+                break;
+
+            case VIDEO_LOADER:
+                if (movie == null) return null;
+                entityUri = AutoMovieContentProvider.Video.buildMovieVideoUri(movie.getId());
+                break;
+
+            case REVIEW_LOADER:
+                if (movie == null) return null;
+                entityUri = AutoMovieContentProvider.Review.buildMovieReviewUri(movie.getId());
+                break;
+        }
+
+
+        return new CursorLoader(getActivity(),
+                entityUri,
+                entityColumns,
+                null,
+                null,
+                null
+        );
+
+    }
+
+    @Override
+    public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
+
+        if (data == null)
+            return;
+
+        if (getView() == null)
+            return;
+
+
+        switch (loader.getId()) {
+            case MOVIE_LOADER:
+                resolveMovieDetails(data);
+                break;
+
+            case VIDEO_LOADER:
+                resolveVideoDetails(data);
+                break;
+
+            case REVIEW_LOADER:
+                resolveReviewDetails(data);
+                break;
+        }
+
+
+    }
 
     @Override
     public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {

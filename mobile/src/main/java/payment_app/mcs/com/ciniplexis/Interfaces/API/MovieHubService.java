@@ -1,10 +1,9 @@
 package payment_app.mcs.com.ciniplexis.Interfaces.API;
 
-import java.util.ArrayList;
-
-import payment_app.mcs.com.ciniplexis.Model.DataModels.MovieDataModel;
-import payment_app.mcs.com.ciniplexis.Model.DataModels.PageDataModel;
-import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.MoviePageDataModel;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.ReviewPageDataModel;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.VideoCollection;
+import payment_app.mcs.com.ciniplexis.Utility.HelperUtility;
 import retrofit.http.Path;
 import retrofit.http.Query;
 import retrofit.http.GET;
@@ -16,16 +15,16 @@ import rx.Observable;
 public interface MovieHubService {
 
 
-    @GET(MovieUtility.DISCOVER_MOVIE)
-    Observable<PageDataModel> getMoviesSortBy(@Query("") String criteria, @Query("page") int page);
+    @GET(HelperUtility.DISCOVER_MOVIE)
+    Observable<MoviePageDataModel> getMoviesSortBy(@Query("") String criteria, @Query("page") int page);
 
-    @GET(MovieUtility.DISCOVER_MOVIE)
-    Observable<PageDataModel>
+    @GET(HelperUtility.DISCOVER_MOVIE)
+    Observable<MoviePageDataModel>
     getMovieBetweenDates(@Query("primary_release_date.gte") String startDate, @Query("primary_release_date.lte") String endDate, @Query("page") int page);
 
-    @GET(MovieUtility.DISCOVER_MOVIE)
-    Observable<PageDataModel> getTrailers();
+    @GET(HelperUtility.MOVIE_VIDEOS)
+    Observable<VideoCollection> getTrailers(@Path("id") int movieId);
 
-    @GET(MovieUtility.DISCOVER_MOVIE)
-    Observable<PageDataModel> getReviews();
+    @GET(HelperUtility.MOVIE_REVIEWS)
+    Observable<ReviewPageDataModel> getReviews(@Path("id") int movieId);
 }

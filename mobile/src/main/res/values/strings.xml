@@ -27,10 +27,19 @@
     <string name="release_date_lbl">Released:</string>
     <string name="loading_image">loading image&#8230;</string>
     <string name="loading_title">loading title&#8230;</string>
+    <string name="dummy_trailer_name">Trailer 1</string>
+    <string name="dummy_trailer_description">720p Trailer</string>
+    <string name="dummy_author">Ravi Diharrie</string>
+    <string name="dummy_comment">This movies showed scenes that depicted many key features of humans and gave great insight into there psyche..</string>
     <string name="dummy_title">World of Kors</string>
     <string name="dummy_date">12/10/2015</string>
     <string name="dummy_rating">3.5</string>
     <string name="dummy_rating_val">(3.5)</string>
-    <string name="dummy_price">$1300.00</string>
+    <string name="dummy_price">$0.00</string>
     <string name="dummy_plot">Once upon a time when the sky and earth were one and the same</string>
+    <string name="review_unavailable">Review Unavailable</string>
+    <string name="review_tab">Reviews</string>
+    <string name="trailer_unavailable">Trailer Unavailable</string>
+    <string name="trailer_tab">Trailers</string>
+    <string name="share">Share</string>
 </resources>

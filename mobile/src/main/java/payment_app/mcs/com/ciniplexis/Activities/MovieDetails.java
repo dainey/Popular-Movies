@@ -8,9 +8,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import payment_app.mcs.com.ciniplexis.Fragments.MovieDetailsFragment;
-import payment_app.mcs.com.ciniplexis.Interfaces.CallBacks.MovieCallback;
 import payment_app.mcs.com.ciniplexis.R;
-import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
+import payment_app.mcs.com.ciniplexis.Utility.HelperUtility;
 
 /**
  * Created by ogayle on 25/10/2015.
@@ -37,7 +36,7 @@ public class MovieDetails extends AppCompatActivity {
 
 
         Bundle bundle = new Bundle();
-        bundle.putParcelable(MovieUtility.MOVIE_URI, getIntent().getData());
+        bundle.putParcelable(HelperUtility.MOVIE_URI, getIntent().getData());
 
         FragmentManager fm = getSupportFragmentManager();
         MovieDetailsFragment ddf = new MovieDetailsFragment();//.getInstance(mdm);

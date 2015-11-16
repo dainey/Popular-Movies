@@ -50,7 +50,9 @@ public class MovieViewModel extends RecyclerView.ViewHolder {
     }
 
     public void setFavourite(Drawable favouriteDrawable) {
-        this.favourite.setCompoundDrawables(favouriteDrawable, null, null, null);
+        this.favourite.setCompoundDrawablesWithIntrinsicBounds(favouriteDrawable, null, null, null);
+
+        //favourite.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_favorite, 0, 0, 0);
     }
 
     public void setRatingValue(String ratingValue) {
@@ -70,8 +72,8 @@ public class MovieViewModel extends RecyclerView.ViewHolder {
         Rating.setNumStars(1);
     }
 
-    public void setRatingColor(int colorId){
-        LayerDrawable starLayer = (LayerDrawable)Rating.getProgressDrawable();
+    public void setRatingColor(int colorId) {
+        LayerDrawable starLayer = (LayerDrawable) Rating.getProgressDrawable();
         starLayer.setColorFilter(colorId, PorterDuff.Mode.SRC_ATOP);
     }
 

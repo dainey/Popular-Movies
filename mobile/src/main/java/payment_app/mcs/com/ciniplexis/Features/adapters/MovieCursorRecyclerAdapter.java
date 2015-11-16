@@ -6,6 +6,9 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +21,7 @@ import payment_app.mcs.com.ciniplexis.Utility.Constants;
 import payment_app.mcs.com.ciniplexis.Model.DataModels.MovieDataModel;
 import payment_app.mcs.com.ciniplexis.Model.ViewModels.MovieViewModel;
 import payment_app.mcs.com.ciniplexis.R;
-import payment_app.mcs.com.ciniplexis.Utility.MovieUtility;
+import payment_app.mcs.com.ciniplexis.Utility.HelperUtility;
 
 /**
  * Created by ogayle on 28/10/2015.
@@ -28,7 +31,7 @@ public class MovieCursorRecyclerAdapter extends CursorRecyclerAdapter<MovieViewM
 
     private Activity _activity;
     private Drawable placeholder, favorite;
-    private int ratingProgressColorId;
+    private int ratingProgressColorId, selectedPosition = -1;
     private MovieDetailsCallBack defaultDetails = new MovieDetailsCallBack() {
         @Override
         public void displayDetails(Uri uri) {
@@ -40,10 +43,10 @@ public class MovieCursorRecyclerAdapter extends CursorRecyclerAdapter<MovieViewM
         super(cursor);
         _activity = activity;
 
-        int favoriteColorId = ContextCompat.getColor(activity, R.color.colorAccent);
-        ratingProgressColorId = ContextCompat.getColor(activity, R.color.dividerColor);
+        int favoriteColorId = ContextCompat.getColor(activity, R.color.primary_red);
+        ratingProgressColorId = ContextCompat.getColor(activity, R.color.primary_red);
         placeholder = ContextCompat.getDrawable(_activity, R.drawable.ic_video_camera_icon);
-        favorite = ContextCompat.getDrawable(_activity, R.drawable.ic_action_favorite);
+        favorite = ContextCompat.getDrawable(_activity, R.drawable.ic_action_favorite_dark);
 
         favorite.setColorFilter(favoriteColorId, PorterDuff.Mode.MULTIPLY);
 
@@ -58,11 +61,15 @@ public class MovieCursorRecyclerAdapter extends CursorRecyclerAdapter<MovieViewM
         return super.getItemViewType(position);
     }
 
+    @Override
+    public void unregisterAdapterDataObserver(RecyclerView.AdapterDataObserver observer) {
+        super.unregisterAdapterDataObserver(observer);
+    }
 
     @Override
-    public void onBindViewHolder(MovieViewModel holder, final Cursor cursor) {
+    public void onBindViewHolder(MovieViewModel holder, final Cursor cursor, final int position) {
 
-        final MovieDataModel movie = MovieUtility.getMovieDataFromCursor(cursor);
+        final MovieDataModel movie = new HelperUtility().getMovieFromCursor(cursor);
         holder.setTitle(movie.getTitle());
         holder.setRating((float) movie.getRating() / 2);
         holder.setRatingValue(String.format("(%.1f)", movie.getRating()));
@@ -81,13 +88,28 @@ public class MovieCursorRecyclerAdapter extends CursorRecyclerAdapter<MovieViewM
                 .into(holder.getImageView());
 
 
+        if (selectedPosition == position)
+            ((CardView) holder.container).setCardBackgroundColor(ContextCompat.getColor(_activity, R.color.yellow_green_light));
+        else
+            ((CardView) holder.container).setCardBackgroundColor(ContextCompat.getColor(_activity, R.color.movie_card_bg));
+
         holder.container.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Uri myUri = MovieEntry.buildMovieUri(movie.getId());
                 defaultDetails.displayDetails(myUri);
+                int prevSelected = selectedPosition;
+                selectedPosition = position;
+                notifyItemChanged(position);
+
+                if (prevSelected != -1)
+                    notifyItemChanged(prevSelected);
             }
         });
+    }
+
+    public int getSelectedPosition() {
+        return selectedPosition;
     }
 
     @Override

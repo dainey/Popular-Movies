@@ -26,6 +26,7 @@ public abstract class CursorRecyclerAdapter<ViewHolder extends RecyclerView.View
         setHasStableIds(true);
     }
 
+
     //@Override
     public final void onBindViewHolder(ViewHolder holder, int position) {
 
@@ -35,10 +36,10 @@ public abstract class CursorRecyclerAdapter<ViewHolder extends RecyclerView.View
         if (!mCursor.moveToPosition(position))
             throw new IllegalStateException("Could not move cursor to position " + position);
 
-        onBindViewHolder(holder, mCursor);
+        onBindViewHolder(holder, mCursor, position);
     }
 
-    public abstract void onBindViewHolder(ViewHolder view, Cursor cursor);
+    public abstract void onBindViewHolder(ViewHolder view, Cursor cursor, int position);
 
 
     public Cursor getCursor() {

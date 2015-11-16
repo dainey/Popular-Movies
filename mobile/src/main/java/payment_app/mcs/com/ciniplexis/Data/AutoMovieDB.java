@@ -11,6 +11,8 @@ import net.simonvt.schematic.annotation.Table;
 
 import payment_app.mcs.com.ciniplexis.Interfaces.DB.MovieColumns;
 import payment_app.mcs.com.ciniplexis.Interfaces.DB.ReviewColumns;
+import payment_app.mcs.com.ciniplexis.Interfaces.DB.VideoColumns;
+import payment_app.mcs.com.ciniplexis.Model.DataModels.VideoCollection;
 
 /**
  * Created by ogayle on 09/11/2015.
@@ -29,6 +31,9 @@ public class AutoMovieDB {
 
     @Table(ReviewColumns.class)
     public static final String REVIEW = "review";
+
+    @Table(VideoColumns.class)
+    public static final String VIDEO = "video";
 
     @OnCreate
     public static void onCreate(Context context, SQLiteDatabase sqlDb) {

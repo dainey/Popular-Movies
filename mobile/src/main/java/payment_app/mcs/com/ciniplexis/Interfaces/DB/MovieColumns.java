@@ -1,5 +1,7 @@
 package payment_app.mcs.com.ciniplexis.Interfaces.DB;
 
+import android.provider.BaseColumns;
+
 import net.simonvt.schematic.annotation.DataType;
 import net.simonvt.schematic.annotation.DataType.Type;
 import net.simonvt.schematic.annotation.NotNull;
@@ -12,7 +14,7 @@ public interface MovieColumns {
 
     @DataType(Type.INTEGER)
     @PrimaryKey
-    String _ID = "_id";
+    String _ID = BaseColumns._ID;
 
     @DataType(Type.TEXT)
     @NotNull
